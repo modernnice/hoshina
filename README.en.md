@@ -20,6 +20,8 @@ It combines **seasonal discovery, heat ranking, search, anime details, cast and 
 
 中文版: [README.md](./README.md)
 
+![GitHub Preview](./github_en.png)
+
 ---
 
 ## ✨ Core Features

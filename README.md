@@ -20,6 +20,8 @@
 
 English version: [README.en.md](./README.en.md)
 
+![GitHub Preview](./github.png)
+
 ---
 
 ## ✨ 核心特性

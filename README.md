@@ -1,11 +1,18 @@
 # 星奈 Hoshina
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.x-blue)](https://flutter.dev/)
-[![Dart](https://img.shields.io/badge/Dart-3.x-0175C2)](https://dart.dev/)
-[![Supabase](https://img.shields.io/badge/Supabase-Cloud%20Sync-green)](https://supabase.com/)
-[![Hive](https://img.shields.io/badge/Hive-Local%20First-orange)](https://github.com/isar/hive)
-[![LLM Agent](https://img.shields.io/badge/LLM-Agent-purple)](#-星奈-agent-能力)
-[![Star](https://img.shields.io/badge/Welcome-Star%20this%20project-yellow)](https://github.com/)
+<p align="left">
+  <img src="https://img.shields.io/badge/Flutter-3.x-02569B?style=for-the-badge&logo=flutter&logoColor=white" alt="Flutter">
+  <img src="https://img.shields.io/badge/Dart-3.x-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart">
+  <img src="https://img.shields.io/badge/Supabase-Cloud%20Sync-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white" alt="Supabase">
+  <img src="https://img.shields.io/badge/Hive-Local%20First-F59E0B?style=for-the-badge&logo=databricks&logoColor=white" alt="Hive">
+  <img src="https://img.shields.io/badge/LLM-Agent-7C3AED?style=for-the-badge&logo=openai&logoColor=white" alt="LLM Agent">
+</p>
+
+<p align="left">
+  <img src="https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20macOS-0F172A?style=flat-square" alt="Platform">
+  <img src="https://img.shields.io/badge/Status-Active%20Development-16A34A?style=flat-square" alt="Status">
+  <img src="https://img.shields.io/badge/Welcome-Star%20this%20project-F59E0B?style=flat-square" alt="Star">
+</p>
 
 **星奈 Hoshina** 是一个面向二次元追番场景打造的 AI 原生番剧应用。
 

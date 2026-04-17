@@ -1,11 +1,11 @@
 # Hoshina
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B)](https://flutter.dev/)
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-blue)](https://flutter.dev/)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2)](https://dart.dev/)
-[![Supabase](https://img.shields.io/badge/Supabase-Cloud%20Sync-3ECF8E)](https://supabase.com/)
-[![Hive](https://img.shields.io/badge/Hive-Local%20First-F59E0B)](https://github.com/isar/hive)
-[![LLM Agent](https://img.shields.io/badge/LLM-Agent-7C3AED)](#-hoshina-agent-capabilities)
-[![Star](https://img.shields.io/badge/Welcome-Star%20this%20project-f59e0b)](https://github.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Cloud%20Sync-green)](https://supabase.com/)
+[![Hive](https://img.shields.io/badge/Hive-Local%20First-orange)](https://github.com/isar/hive)
+[![LLM Agent](https://img.shields.io/badge/LLM-Agent-purple)](#-hoshina-agent-capabilities)
+[![Star](https://img.shields.io/badge/Welcome-Star%20this%20project-yellow)](https://github.com/)
 
 **Hoshina** is an AI-native anime tracking app built around the full weekly anime workflow.
 
@@ -199,4 +199,4 @@ If you want to start from the AI layer, begin with:
 
 ## 📄 License
 
-This repository does not currently declare a license. Add one before formal open-source distribution.
+MIT License

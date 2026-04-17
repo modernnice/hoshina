@@ -1,11 +1,11 @@
 # 星奈 Hoshina
 
-[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B)](https://flutter.dev/)
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-blue)](https://flutter.dev/)
 [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2)](https://dart.dev/)
-[![Supabase](https://img.shields.io/badge/Supabase-Cloud%20Sync-3ECF8E)](https://supabase.com/)
-[![Hive](https://img.shields.io/badge/Hive-Local%20First-F59E0B)](https://github.com/isar/hive)
-[![LLM Agent](https://img.shields.io/badge/LLM-Agent-7C3AED)](#-星奈-agent-能力)
-[![Star](https://img.shields.io/badge/Welcome-Star%20this%20project-f59e0b)](https://github.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Cloud%20Sync-green)](https://supabase.com/)
+[![Hive](https://img.shields.io/badge/Hive-Local%20First-orange)](https://github.com/isar/hive)
+[![LLM Agent](https://img.shields.io/badge/LLM-Agent-purple)](#-星奈-agent-能力)
+[![Star](https://img.shields.io/badge/Welcome-Star%20this%20project-yellow)](https://github.com/)
 
 **星奈 Hoshina** 是一个面向二次元追番场景打造的 AI 原生番剧应用。
 
@@ -199,4 +199,4 @@ lib/
 
 ## 📄 License
 
-当前仓库尚未声明 License；如果计划正式开源分发，建议补充许可证文件。
+MIT License

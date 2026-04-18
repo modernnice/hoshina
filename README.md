@@ -156,6 +156,8 @@ lib/
 
 ## 📝 更新日志
 
+当前已发布版本 `v1`，可前往 [GitHub Releases](https://github.com/modernnice/hoshina/releases) 下载。
+
 ### v0
 
 - 项目启动于 `2026.4.9`

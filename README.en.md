@@ -156,6 +156,8 @@ This keeps the experience fast locally while still supporting multi-device conti
 
 ## 📝 Changelog
 
+The current released version is `v1`, and it can be downloaded from [GitHub Releases](https://github.com/modernnice/hoshina/releases).
+
 ### v0
 
 - Project started on `2026.4.9`

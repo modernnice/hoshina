@@ -154,6 +154,47 @@ lib/
 
 ---
 
+## 🧩 本地复现
+
+本项目源码下载到本地后，可按以下方式完成基础运行环境配置：
+
+1. 将仓库克隆到本地。
+2. 在项目根目录下，将 `.env.example` 复制为 `.env`。
+3. 在 `.env` 中填入可用的 Supabase 配置。
+4. 执行 `flutter pub get` 安装依赖。
+5. 执行 `flutter run` 启动应用，或执行 `flutter test` 运行测试。
+
+本地命令示例：
+
+```bash
+git clone https://github.com/modernnice/hoshina.git
+cd hoshina
+cp .env.example .env
+flutter pub get
+flutter test
+flutter run
+```
+
+`.env` 当前包含以下配置项：
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+
+主要运行入口与代码位置：
+
+- `lib/main.dart`：应用入口
+- `lib/screens/`：页面层
+- `lib/services/`：认证、同步、通知、存储、API 与 LLM
+- `lib/services/agent/`：Agent 与工具调用逻辑
+
+平台目录如下：
+
+- `android/`
+- `ios/`
+- `macos/`
+
+---
+
 ## 📝 更新日志
 
 当前已发布版本 `v1`，可前往 [GitHub Releases](https://github.com/modernnice/hoshina/releases) 下载。

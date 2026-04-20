@@ -154,6 +154,47 @@ This keeps the experience fast locally while still supporting multi-device conti
 
 ---
 
+## 🧩 Local Reproduction
+
+After downloading the source code locally, the project can be set up and run with the following steps:
+
+1. Clone the repository.
+2. Copy `.env.example` to `.env` in the project root.
+3. Fill in valid Supabase values in `.env`.
+4. Run `flutter pub get` to install dependencies.
+5. Run `flutter run` to start the app, or `flutter test` to run tests.
+
+Local commands:
+
+```bash
+git clone https://github.com/modernnice/hoshina.git
+cd hoshina
+cp .env.example .env
+flutter pub get
+flutter test
+flutter run
+```
+
+The `.env` file currently contains:
+
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+
+Primary entry points and code locations:
+
+- `lib/main.dart`: app entry
+- `lib/screens/`: UI screens
+- `lib/services/`: auth, sync, notification, storage, API, and LLM logic
+- `lib/services/agent/`: agent and tool-calling logic
+
+Platform directories:
+
+- `android/`
+- `ios/`
+- `macos/`
+
+---
+
 ## 📝 Changelog
 
 The current released version is `v1`, and it can be downloaded from [GitHub Releases](https://github.com/modernnice/hoshina/releases).

@@ -78,6 +78,20 @@ class LocalNotificationService {
 
   void setTapHandler(void Function(int subjectId) handler) {
     _tapHandler = handler;
+    final pending = _pendingSubjectId;
+    if (pending != null) {
+      handler(pending);
+    }
+  }
+
+  int? peekPendingSubjectId() {
+    return _pendingSubjectId;
+  }
+
+  void clearPendingSubjectId([int? subjectId]) {
+    if (subjectId == null || _pendingSubjectId == subjectId) {
+      _pendingSubjectId = null;
+    }
   }
 
   int? consumePendingSubjectId() {
@@ -177,14 +191,15 @@ class LocalNotificationService {
   void _handlePayload(String? payload) {
     final subjectId = int.tryParse(payload ?? '');
     if (subjectId == null) {
+      debugPrint('通知点击 payload 无法解析: $payload');
       return;
     }
+    debugPrint('收到通知点击，subjectId=$subjectId');
+    _pendingSubjectId = subjectId;
     final handler = _tapHandler;
     if (handler != null) {
       handler(subjectId);
-      return;
     }
-    _pendingSubjectId = subjectId;
   }
 }
 

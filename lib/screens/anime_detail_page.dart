@@ -185,9 +185,10 @@ class _AnimeDetailPageState extends State<AnimeDetailPage> {
       return;
     }
     final hasReviewContent = progress.privateRating > 0 || progress.privateReview.trim().isNotEmpty;
+    final shouldKeepReminderOnly = progress.reminderEnabled;
     if (_selectedStatus == null) {
-      if (hasReviewContent) {
-        // 打分/评价可独立保存，不与追番状态挂钩。
+      if (hasReviewContent || shouldKeepReminderOnly) {
+        // 打分/评价和提醒都可以独立保存，不与追番状态挂钩。
         await _watchlistStorage.upsert(progress.copyWith(statusSelected: false));
         return;
       }
@@ -631,7 +632,7 @@ class _AnimeDetailPageState extends State<AnimeDetailPage> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: relationColor.withOpacity(0.14),
+                                    color: relationColor.withValues(alpha: 0.14),
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: Text(

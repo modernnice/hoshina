@@ -44,23 +44,36 @@ class DramaTrackerApp extends StatefulWidget {
   State<DramaTrackerApp> createState() => _DramaTrackerAppState();
 }
 
-class _DramaTrackerAppState extends State<DramaTrackerApp> {
+class _DramaTrackerAppState extends State<DramaTrackerApp> with WidgetsBindingObserver {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   final WatchlistStorage _storage = WatchlistStorage();
+  bool _notificationNavigationScheduled = false;
+  int? _notificationNavigationInFlightSubjectId;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     LocalNotificationService.instance.setTapHandler((subjectId) {
-      _openSubjectDetailIfLoggedIn(subjectId);
+      _scheduleNotificationNavigation();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final pending = LocalNotificationService.instance.consumePendingSubjectId();
-      if (pending != null) {
-        _openSubjectDetailIfLoggedIn(pending);
-      }
+      _scheduleNotificationNavigation();
       _restoreLocalNotifications();
     });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _scheduleNotificationNavigation();
+    }
   }
 
   bool get _isLoggedIn {
@@ -70,19 +83,70 @@ class _DramaTrackerAppState extends State<DramaTrackerApp> {
     return AuthService.instance.currentSession != null;
   }
 
-  void _openSubjectDetailIfLoggedIn(int subjectId) {
+  bool _tryOpenSubjectDetailFromNotification(int subjectId) {
     if (!_isLoggedIn) {
-      return;
+      debugPrint('通知跳转暂缓，当前未登录，subjectId=$subjectId');
+      return false;
     }
     final navigator = _navigatorKey.currentState;
     if (navigator == null) {
+      debugPrint('通知跳转暂缓，navigator 未就绪，subjectId=$subjectId');
+      return false;
+    }
+    if (_notificationNavigationInFlightSubjectId == subjectId) {
+      debugPrint('通知跳转已在进行中，subjectId=$subjectId');
+      return false;
+    }
+    _notificationNavigationInFlightSubjectId = subjectId;
+    try {
+      debugPrint('准备跳转到番剧详情，subjectId=$subjectId');
+      navigator
+          .push(
+            MaterialPageRoute(
+              builder: (_) => AnimeDetailPage(subjectId: subjectId),
+            ),
+          )
+          .whenComplete(() {
+            if (!mounted) {
+              return;
+            }
+            if (_notificationNavigationInFlightSubjectId == subjectId) {
+              _notificationNavigationInFlightSubjectId = null;
+            }
+          });
+      LocalNotificationService.instance.clearPendingSubjectId(subjectId);
+    } catch (e) {
+      _notificationNavigationInFlightSubjectId = null;
+      debugPrint('通知跳转到番剧详情失败: $e');
+      return false;
+    }
+    return true;
+  }
+
+  void _scheduleNotificationNavigation() {
+    if (_notificationNavigationScheduled) {
       return;
     }
-    navigator.push(
-      MaterialPageRoute(
-        builder: (_) => AnimeDetailPage(subjectId: subjectId),
-      ),
-    );
+    _notificationNavigationScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _notificationNavigationScheduled = false;
+      _tryOpenPendingNotificationSubject();
+    });
+  }
+
+  void _tryOpenPendingNotificationSubject() {
+    final pending = LocalNotificationService.instance.peekPendingSubjectId();
+    if (pending == null) {
+      return;
+    }
+    final lifecycleState = WidgetsBinding.instance.lifecycleState;
+    if (lifecycleState == AppLifecycleState.paused ||
+        lifecycleState == AppLifecycleState.detached ||
+        lifecycleState == AppLifecycleState.hidden) {
+      debugPrint('通知跳转暂缓，应用生命周期=$lifecycleState，subjectId=$pending');
+      return;
+    }
+    _tryOpenSubjectDetailFromNotification(pending);
   }
 
   void _refreshAuthState() {
@@ -90,6 +154,9 @@ class _DramaTrackerAppState extends State<DramaTrackerApp> {
       return;
     }
     setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scheduleNotificationNavigation();
+    });
     
     if (_isLoggedIn) {
       CloudSyncService.instance.downloadToLocalPreferences(_storage).then((_) async {
@@ -97,6 +164,7 @@ class _DramaTrackerAppState extends State<DramaTrackerApp> {
         if (mounted) {
           setState(() {});
         }
+        _scheduleNotificationNavigation();
       });
     }
   }

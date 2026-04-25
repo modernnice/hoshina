@@ -217,6 +217,12 @@ The current released version is `v1`, and it can be downloaded from [GitHub Rele
 8. Added a copy button to the Agent chat interface.
 9. Significantly improved Hoshina Agent intent understanding, tool-calling, and ReAct reasoning; added support for querying anime production staff and seiyuu information; and redesigned the preference-based recommendation system.
 
+### v1.1 · 2026.4.25
+
+1. Fixed missing Android local notification scheduling configuration required for weekly update reminders, and added a regression test for it.
+2. Fixed an issue where reminder-only entries were cleared after leaving the detail page when no watch status had been selected, so reminder settings can now persist independently.
+3. Fixed the iOS behavior where tapping a reminder from Notification Center only returned to the app shell; it now opens the corresponding anime detail page and includes stronger debug logging for the notification tap flow.
+
 ---
 
 ## 🎯 Who This Project Is For

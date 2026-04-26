@@ -15,7 +15,40 @@ class AuthService {
     }
   }
 
-  Session? get currentSession => _clientOrNull?.auth.currentSession;
+  Session? get currentSession {
+    final session = _clientOrNull?.auth.currentSession;
+    if (session == null || session.isExpired) {
+      return null;
+    }
+    return session;
+  }
+
+  Stream<AuthState>? get authStateChanges => _clientOrNull?.auth.onAuthStateChange;
+
+  Future<bool> ensureValidSession() async {
+    final client = _clientOrNull;
+    if (client == null) {
+      return false;
+    }
+    final session = client.auth.currentSession;
+    if (session == null) {
+      return false;
+    }
+    if (!session.isExpired) {
+      return true;
+    }
+    try {
+      final response = await client.auth.refreshSession();
+      final refreshed = response.session ?? client.auth.currentSession;
+      if (refreshed != null && !refreshed.isExpired) {
+        return true;
+      }
+    } catch (e) {
+      debugPrint('Failed to refresh expired session: $e');
+    }
+    await logout();
+    return false;
+  }
 
   String _emailFromUserId(String userId) {
     final raw = userId.trim().toLowerCase();
@@ -133,6 +166,6 @@ class AuthService {
       debugPrint('Error clearing local data on logout: $e');
     }
 
-    await client.auth.signOut();
+    await client.auth.signOut(scope: SignOutScope.local);
   }
 }

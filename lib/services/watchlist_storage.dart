@@ -1,6 +1,7 @@
 import 'package:drama_tracker/models/anime_calendar_item.dart';
 import 'package:drama_tracker/models/anime_progress.dart';
 import 'package:drama_tracker/services/cloud_sync_service.dart';
+import 'package:drama_tracker/services/watch_status_reminder_policy.dart';
 import 'package:hive/hive.dart';
 
 enum WatchStatus { wish, watching, finished }
@@ -11,6 +12,19 @@ class WatchlistStorage {
   final Box<Map> _box;
 
   String _key(int id) => id.toString();
+
+  AnimeProgress _normalizeLoadedProgress(AnimeProgress progress) {
+    final normalized = WatchStatusReminderPolicy.normalize(progress);
+    if (normalized.createdAtMs > 0) {
+      return normalized;
+    }
+    return normalized.copyWith(createdAtMs: DateTime.now().millisecondsSinceEpoch);
+  }
+
+  bool _needsRepair(AnimeProgress raw, AnimeProgress normalized) {
+    return raw.reminderEnabled != normalized.reminderEnabled ||
+        raw.createdAtMs != normalized.createdAtMs;
+  }
 
   Future<void> save(AnimeCalendarItem item, WatchStatus status) async {
     final existing = getProgress(item.id);
@@ -54,12 +68,14 @@ class WatchlistStorage {
     if (value == null) {
       return null;
     }
-    return AnimeProgress.fromMap(Map<String, dynamic>.from(value));
+    return _normalizeLoadedProgress(
+      AnimeProgress.fromMap(Map<String, dynamic>.from(value)),
+    );
   }
 
   Future<void> upsert(AnimeProgress progress, {bool syncToCloud = true}) async {
     final existing = getProgress(progress.subjectId);
-    final normalized = progress.copyWith(
+    final normalized = WatchStatusReminderPolicy.normalize(progress).copyWith(
       createdAtMs: existing?.createdAtMs ?? (progress.createdAtMs > 0 ? progress.createdAtMs : DateTime.now().millisecondsSinceEpoch),
     );
     await _box.put(_key(progress.subjectId), normalized.toMap());
@@ -72,10 +88,25 @@ class WatchlistStorage {
     return _box.values
         .whereType<Map>()
         .map((map) => AnimeProgress.fromMap(Map<String, dynamic>.from(map)))
-        .map((item) => item.createdAtMs > 0
-            ? item
-            : item.copyWith(createdAtMs: DateTime.now().millisecondsSinceEpoch))
+        .map(_normalizeLoadedProgress)
         .toList();
+  }
+
+  Future<void> repairInvalidReminderStates({bool syncToCloud = false}) async {
+    final snapshots = _box.values
+        .whereType<Map>()
+        .map((map) => AnimeProgress.fromMap(Map<String, dynamic>.from(map)))
+        .toList();
+    for (final raw in snapshots) {
+      final normalized = _normalizeLoadedProgress(raw);
+      if (!_needsRepair(raw, normalized)) {
+        continue;
+      }
+      await _box.put(_key(normalized.subjectId), normalized.toMap());
+      if (syncToCloud) {
+        CloudSyncService.instance.syncSinglePreference(normalized);
+      }
+    }
   }
 
   List<AnimeProgress> getByStatus(WatchStatus status) {

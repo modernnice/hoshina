@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drama_tracker/config/supabase_config.dart';
 import 'package:drama_tracker/screens/app_shell_page.dart';
 import 'package:drama_tracker/screens/anime_detail_page.dart';
@@ -28,6 +30,7 @@ Future<void> main() async {
       url: SupabaseConfig.url,
       anonKey: SupabaseConfig.anonKey,
     );
+    await AuthService.instance.ensureValidSession();
   }
   try {
     await LocalNotificationService.instance.initialize();
@@ -47,6 +50,7 @@ class DramaTrackerApp extends StatefulWidget {
 class _DramaTrackerAppState extends State<DramaTrackerApp> with WidgetsBindingObserver {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   final WatchlistStorage _storage = WatchlistStorage();
+  StreamSubscription<AuthState>? _authStateSubscription;
   bool _notificationNavigationScheduled = false;
   int? _notificationNavigationInFlightSubjectId;
 
@@ -54,6 +58,17 @@ class _DramaTrackerAppState extends State<DramaTrackerApp> with WidgetsBindingOb
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _authStateSubscription = AuthService.instance.authStateChanges?.listen((state) {
+      switch (state.event) {
+        case AuthChangeEvent.initialSession:
+        case AuthChangeEvent.signedIn:
+        case AuthChangeEvent.signedOut:
+          _refreshAuthState();
+          break;
+        default:
+          break;
+      }
+    });
     LocalNotificationService.instance.setTapHandler((subjectId) {
       _scheduleNotificationNavigation();
     });
@@ -65,6 +80,7 @@ class _DramaTrackerAppState extends State<DramaTrackerApp> with WidgetsBindingOb
 
   @override
   void dispose() {
+    _authStateSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -72,7 +88,20 @@ class _DramaTrackerAppState extends State<DramaTrackerApp> with WidgetsBindingOb
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _scheduleNotificationNavigation();
+      Future<void>.microtask(() async {
+        final wasLoggedIn = _isLoggedIn;
+        if (SupabaseConfig.isConfigured) {
+          await AuthService.instance.ensureValidSession();
+        }
+        if (!mounted) {
+          return;
+        }
+        if (wasLoggedIn != _isLoggedIn) {
+          _refreshAuthState();
+          return;
+        }
+        _scheduleNotificationNavigation();
+      });
     }
   }
 
@@ -171,6 +200,7 @@ class _DramaTrackerAppState extends State<DramaTrackerApp> with WidgetsBindingOb
 
   Future<void> _restoreLocalNotifications() async {
     try {
+      await _storage.repairInvalidReminderStates();
       await LocalNotificationService.instance.syncAllFromStorage(_storage);
     } catch (e) {
       debugPrint('恢复本地通知失败: $e');

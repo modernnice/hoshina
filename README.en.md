@@ -217,11 +217,13 @@ The current released version is `v1`, and it can be downloaded from [GitHub Rele
 8. Added a copy button to the Agent chat interface.
 9. Significantly improved Hoshina Agent intent understanding, tool-calling, and ReAct reasoning; added support for querying anime production staff and seiyuu information; and redesigned the preference-based recommendation system.
 
-### v1.1 · 2026.4.25
+### v1.1 · 2026.4.26
 
 1. Fixed missing Android local notification scheduling configuration required for weekly update reminders, and added a regression test for it.
-2. Fixed an issue where reminder-only entries were cleared after leaving the detail page when no watch status had been selected, so reminder settings can now persist independently.
-3. Fixed the iOS behavior where tapping a reminder from Notification Center only returned to the app shell; it now opens the corresponding anime detail page and includes stronger debug logging for the notification tap flow.
+2. Fixed the iOS behavior where tapping a reminder from Notification Center only returned to the app shell; it now opens the corresponding anime detail page and includes stronger debug logging for the notification tap flow.
+3. Reworked the reminder policy so that fixed-time update reminders are only available while an anime is marked as `watching`; switching a title to `wish` or `finished` now turns the reminder off immediately, and the same rule is enforced consistently across the detail page, calendar, search, watchlist, and Agent actions.
+4. Added a repair path for legacy local data so old entries that were not `watching` but still had reminders enabled are automatically corrected during startup restore, and added tests covering both reminder policy enforcement and Agent behavior.
+5. Fixed the case where an expired Supabase session could still be treated as signed in; the app now validates and attempts to refresh the session on launch, on foreground resume, and before cloud sync, and safely returns to the login state when the `JWT` is no longer valid instead of surfacing `401 Unauthorized` / `JWT expired` errors.
 
 ---
 

@@ -2,6 +2,7 @@ import 'package:drama_tracker/models/anime_progress.dart';
 import 'package:drama_tracker/screens/anime_detail_page.dart';
 import 'package:drama_tracker/services/cloud_sync_service.dart';
 import 'package:drama_tracker/services/local_notification_service.dart';
+import 'package:drama_tracker/services/watch_status_reminder_policy.dart';
 import 'package:drama_tracker/services/watchlist_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -119,14 +120,25 @@ class _MyListPageState extends State<MyListPage> {
       nextEpisode = item.totalEpisodes;
     }
     final nextStatus = item.totalEpisodes > 0 && nextEpisode >= item.totalEpisodes ? WatchStatus.finished : item.status;
-    final next = item.copyWith(currentEpisode: nextEpisode, status: nextStatus);
+    final next = WatchStatusReminderPolicy.normalize(
+      item.copyWith(currentEpisode: nextEpisode, status: nextStatus, statusSelected: true),
+    );
+    if (item.reminderEnabled && !next.reminderEnabled) {
+      await LocalNotificationService.instance.cancelReminder(item.subjectId);
+    }
     await _storage.upsert(next);
     await _reload();
   }
 
   Future<void> _moveToFinished(AnimeProgress item) async {
     HapticFeedback.mediumImpact();
-    await _storage.upsert(item.copyWith(status: WatchStatus.finished));
+    final next = WatchStatusReminderPolicy.normalize(
+      item.copyWith(status: WatchStatus.finished, statusSelected: true),
+    );
+    if (item.reminderEnabled && !next.reminderEnabled) {
+      await LocalNotificationService.instance.cancelReminder(item.subjectId);
+    }
+    await _storage.upsert(next);
     await _reload();
   }
 
@@ -198,7 +210,13 @@ class _MyListPageState extends State<MyListPage> {
     if (selected == null || selected == item.status) {
       return;
     }
-    await _storage.upsert(item.copyWith(status: selected));
+    final next = WatchStatusReminderPolicy.normalize(
+      item.copyWith(status: selected, statusSelected: true),
+    );
+    if (item.reminderEnabled && !next.reminderEnabled) {
+      await LocalNotificationService.instance.cancelReminder(item.subjectId);
+    }
+    await _storage.upsert(next);
     await _reload();
   }
 

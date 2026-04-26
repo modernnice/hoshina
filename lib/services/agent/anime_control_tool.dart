@@ -3,6 +3,7 @@ import 'package:drama_tracker/models/anime_progress.dart';
 import 'package:drama_tracker/services/agent/agent_models.dart';
 import 'package:drama_tracker/services/bangumi_api_service.dart';
 import 'package:drama_tracker/services/local_notification_service.dart';
+import 'package:drama_tracker/services/watch_status_reminder_policy.dart';
 import 'package:drama_tracker/services/watchlist_storage.dart';
 
 class AnimeControlTool extends AgentTool {
@@ -87,11 +88,13 @@ class AnimeControlTool extends AgentTool {
           return const AgentToolResult(success: false, message: '未找到该番剧，无法修改状态');
         }
         final base = target ?? _buildProgressFromRemote(resolution.remoteTarget!, status: status);
-        final next = base.copyWith(status: status, statusSelected: true);
-        await _storage.upsert(next);
-        if (status == WatchStatus.finished) {
+        final next = WatchStatusReminderPolicy.normalize(
+          base.copyWith(status: status, statusSelected: true),
+        );
+        if (base.reminderEnabled && !next.reminderEnabled) {
           await LocalNotificationService.instance.cancelReminder(next.subjectId);
         }
+        await _storage.upsert(next);
         return AgentToolResult(success: true, message: '已将《${next.name}》标记为${_statusText(status)}');
       case 'UPDATE_PROGRESS':
         final target = resolution.localTarget;
@@ -116,6 +119,12 @@ class AnimeControlTool extends AgentTool {
           return const AgentToolResult(success: false, message: '未找到该番剧，无法修改提醒');
         }
         final on = remindOn?.toString() == 'true';
+        if (on &&
+            !WatchStatusReminderPolicy.canEnableReminderForSelectedStatusName(
+              target.statusSelected ? target.status.name : null,
+            )) {
+          return const AgentToolResult(success: false, message: '只有标记为在看时才能开启提醒');
+        }
         final next = target.copyWith(reminderEnabled: on);
         await _storage.upsert(next);
         if (on) {

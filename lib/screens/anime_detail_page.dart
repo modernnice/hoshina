@@ -3,6 +3,7 @@ import 'package:drama_tracker/models/anime_detail.dart';
 import 'package:drama_tracker/models/anime_progress.dart';
 import 'package:drama_tracker/services/bangumi_api_service.dart';
 import 'package:drama_tracker/services/local_notification_service.dart';
+import 'package:drama_tracker/services/watch_status_reminder_policy.dart';
 import 'package:drama_tracker/services/watchlist_storage.dart';
 import 'package:drama_tracker/utils/network_error_helper.dart';
 import 'package:drama_tracker/widgets/no_network_view.dart';
@@ -185,17 +186,30 @@ class _AnimeDetailPageState extends State<AnimeDetailPage> {
       return;
     }
     final hasReviewContent = progress.privateRating > 0 || progress.privateReview.trim().isNotEmpty;
-    final shouldKeepReminderOnly = progress.reminderEnabled;
     if (_selectedStatus == null) {
-      if (hasReviewContent || shouldKeepReminderOnly) {
-        // 打分/评价和提醒都可以独立保存，不与追番状态挂钩。
-        await _watchlistStorage.upsert(progress.copyWith(statusSelected: false));
+      if (hasReviewContent) {
+        final next = WatchStatusReminderPolicy.normalize(
+          progress.copyWith(statusSelected: false),
+        );
+        if (progress.reminderEnabled && !next.reminderEnabled) {
+          await LocalNotificationService.instance.cancelReminder(next.subjectId);
+        }
+        await _watchlistStorage.upsert(next);
         return;
+      }
+      if (progress.reminderEnabled) {
+        await LocalNotificationService.instance.cancelReminder(progress.subjectId);
       }
       await _watchlistStorage.delete(progress.subjectId);
       return;
     }
-    await _watchlistStorage.upsert(progress.copyWith(status: _selectedStatus, statusSelected: true));
+    final next = WatchStatusReminderPolicy.normalize(
+      progress.copyWith(status: _selectedStatus, statusSelected: true),
+    );
+    if (progress.reminderEnabled && !next.reminderEnabled) {
+      await LocalNotificationService.instance.cancelReminder(next.subjectId);
+    }
+    await _watchlistStorage.upsert(next);
     if (!mounted || !showTip) {
       return;
     }
@@ -207,6 +221,18 @@ class _AnimeDetailPageState extends State<AnimeDetailPage> {
   Future<void> _toggleReminder(bool enabled) async {
     final progress = _progress;
     if (progress == null) {
+      return;
+    }
+    if (enabled &&
+        !WatchStatusReminderPolicy.canEnableReminderForSelectedStatusName(
+          _selectedStatus?.name,
+        )) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('只有在看状态下才可开启更新提醒')),
+      );
       return;
     }
     if (enabled && (progress.updateWeekday < 1 || progress.updateWeekday > 7)) {
@@ -277,12 +303,22 @@ class _AnimeDetailPageState extends State<AnimeDetailPage> {
   }
 
   void _applyProgress(AnimeProgress next, {bool save = true, bool syncSelectedStatus = false}) {
+    final effectiveSelectedStatus = syncSelectedStatus ? next.status : _selectedStatus;
+    final normalized = WatchStatusReminderPolicy.normalize(
+      next.copyWith(
+        status: effectiveSelectedStatus ?? next.status,
+        statusSelected: effectiveSelectedStatus != null,
+      ),
+    );
+    if (next.reminderEnabled && !normalized.reminderEnabled) {
+      LocalNotificationService.instance.cancelReminder(normalized.subjectId);
+    }
     setState(() {
-      _progress = next;
+      _progress = normalized;
       if (syncSelectedStatus) {
-        _selectedStatus = next.status;
+        _selectedStatus = effectiveSelectedStatus;
       }
-      _episodeController.text = next.currentEpisode.toString();
+      _episodeController.text = normalized.currentEpisode.toString();
     });
     if (save) {
       _saveProgress(showTip: false);
@@ -1122,14 +1158,22 @@ class _AnimeDetailPageState extends State<AnimeDetailPage> {
                                       final messenger = ScaffoldMessenger.of(context);
                                       final hasReviewContent =
                                           progress.privateRating > 0 || progress.privateReview.trim().isNotEmpty;
+                                      final next = WatchStatusReminderPolicy.normalize(
+                                        progress.copyWith(statusSelected: false),
+                                      );
                                       setState(() {
                                         _selectedStatus = null;
+                                        _progress = next;
                                       });
                                       if (hasReviewContent) {
-                                        await _watchlistStorage.upsert(
-                                          progress.copyWith(statusSelected: false),
-                                        );
+                                        if (progress.reminderEnabled && !next.reminderEnabled) {
+                                          await LocalNotificationService.instance.cancelReminder(next.subjectId);
+                                        }
+                                        await _watchlistStorage.upsert(next);
                                       } else {
+                                        if (progress.reminderEnabled) {
+                                          await LocalNotificationService.instance.cancelReminder(progress.subjectId);
+                                        }
                                         await _watchlistStorage.delete(progress.subjectId);
                                       }
                                       if (!mounted) {
@@ -1137,7 +1181,11 @@ class _AnimeDetailPageState extends State<AnimeDetailPage> {
                                       }
                                       messenger.showSnackBar(
                                         SnackBar(
-                                          content: Text(hasReviewContent ? '已取消追番状态，已保留打分和评价' : '已取消追番状态'),
+                                          content: Text(
+                                            hasReviewContent
+                                                ? '已取消追番状态，已保留打分和评价并关闭提醒'
+                                                : '已取消追番状态并关闭提醒',
+                                          ),
                                         ),
                                       );
                                       return;

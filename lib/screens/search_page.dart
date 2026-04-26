@@ -1,6 +1,7 @@
 import 'package:drama_tracker/models/anime_calendar_item.dart';
 import 'package:drama_tracker/screens/anime_detail_page.dart';
 import 'package:drama_tracker/services/bangumi_api_service.dart';
+import 'package:drama_tracker/services/local_notification_service.dart';
 import 'package:drama_tracker/services/watchlist_storage.dart';
 import 'package:drama_tracker/utils/network_error_helper.dart';
 import 'package:drama_tracker/widgets/anime_card.dart';
@@ -154,10 +155,17 @@ class _SearchPageState extends State<SearchPage> {
   Future<void> _saveStatus(AnimeCalendarItem item, WatchStatus status) async {
     HapticFeedback.selectionClick();
     final current = _storage.getStatus(item.id);
+    final existing = _storage.getProgress(item.id);
     final isCancel = current == status;
     if (isCancel) {
+      if (existing?.reminderEnabled == true) {
+        await LocalNotificationService.instance.cancelReminder(item.id);
+      }
       await _storage.delete(item.id);
     } else {
+      if (existing?.reminderEnabled == true && status != WatchStatus.watching) {
+        await LocalNotificationService.instance.cancelReminder(item.id);
+      }
       await _storage.save(item, status);
     }
     if (!mounted) {

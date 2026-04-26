@@ -197,7 +197,7 @@ flutter run
 
 ## 📝 更新日志
 
-当前已发布版本 `v1`，可前往 [GitHub Releases](https://github.com/modernnice/hoshina/releases) 下载。
+当前已发布版本 `v1.1`，可前往 [GitHub Releases](https://github.com/modernnice/hoshina/releases) 下载。
 
 ### v0
 

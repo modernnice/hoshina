@@ -197,7 +197,7 @@ Platform directories:
 
 ## 📝 Changelog
 
-The current released version is `v1`, and it can be downloaded from [GitHub Releases](https://github.com/modernnice/hoshina/releases).
+The current released version is `v1.1`, and it can be downloaded from [GitHub Releases](https://github.com/modernnice/hoshina/releases).
 
 ### v0
 
